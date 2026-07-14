@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.DS_Store
+*.local
+.vite/
+
+# 実データ・累積ファイルは絶対にコミットしない（個人情報保護）
+*.csv
+*.xlsx
+assessment-cumulative*.json
+/data-local/
