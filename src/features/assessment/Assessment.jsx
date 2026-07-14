@@ -63,6 +63,8 @@ export default function Assessment() {
     () => groupSum(scoped, (r) => `${r.doctor}／${r.dept}`, (r) => ({ doctor: r.doctor, dept: r.dept })).sort((a, b) => b.ten - a.ten).slice(0, 8),
     [scoped]
   );
+  // 増減点連絡書の原本には医師情報が含まれない。医師データが実質空なら医師別集計は非表示にする。
+  const hasDoctor = useMemo(() => scoped.some((r) => r.doctor && r.doctor !== "不明"), [scoped]);
 
   function chooseFile(mode) {
     modeRef.current = mode;
@@ -245,7 +247,7 @@ export default function Assessment() {
           </div>
         </Panel>
 
-        <Panel title="増減点事由の内訳" note="A〜F区分・減点点数">
+        <Panel title="増減点事由の内訳" note="A〜K区分・減点点数">
           <div className="h-60">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -308,7 +310,13 @@ export default function Assessment() {
           </table>
         </Panel>
 
-        <Panel title="医師別の減点点数" note="上位8名">
+        <Panel title="医師別の減点点数" note={hasDoctor ? "上位8名" : "医師情報なし"}>
+          {!hasDoctor ? (
+            <div className="px-1 py-8 text-center text-xs leading-relaxed text-slate-400">
+              増減点連絡書の原本には医師情報が含まれないため、医師別の集計は表示できません。<br />
+              受付番号でレセコンの担当医情報と突合し「医師」列を付与すると、医師別の傾向も分析できます。
+            </div>
+          ) : (
           <table className="w-full border-collapse text-sm">
             <thead className="text-left text-xs text-slate-500">
               <tr>
@@ -329,6 +337,7 @@ export default function Assessment() {
               ))}
             </tbody>
           </table>
+          )}
         </Panel>
       </div>
       </>
