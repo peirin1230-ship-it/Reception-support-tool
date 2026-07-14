@@ -83,7 +83,6 @@ function parseOfficial(rows) {
     recs.push({
       ym: lastYm || "不明",
       dept,
-      doctor: "不明", // 原本に医師情報なし
       reason: parseReason(r[23]),
       kubun: deriveKubun("", code, item),
       item,
@@ -110,7 +109,6 @@ function parseFlat(rows) {
     recs.push({
       ym: normalizeYm(col(["診療年月", "診療月", "ym"])) || "不明",
       dept: col(["診療科", "科", "dept"]) || "不明",
-      doctor: col(["医師", "医師コード", "担当医", "doctor"]) || "不明",
       reason: parseReason(col(["事由", "増減点事由", "reason"])),
       kubun: deriveKubun(col(["区分", "診療区分", "kubun"]), code, item),
       item,
@@ -146,9 +144,9 @@ export function exportAssessmentCsv(records, filename = "assessment-cumulative.c
     const s = String(v);
     return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
   };
-  const header = ["診療年月", "診療科", "医師", "事由", "区分", "項目名", "増減点数"];
+  const header = ["診療年月", "診療科", "事由", "区分", "項目名", "増減点数"];
   const lines = [header.join(",")];
-  for (const r of records) lines.push([r.ym, r.dept, r.doctor, r.reason, r.kubun, r.item, r.ten].map(esc).join(","));
+  for (const r of records) lines.push([r.ym, r.dept, r.reason, r.kubun, r.item, r.ten].map(esc).join(","));
   const blob = new Blob(["\uFEFF" + lines.join("\r\n")], { type: "text/csv;charset=utf-8;" });
   downloadBlob(blob, filename);
 }

@@ -59,12 +59,10 @@ export default function Assessment() {
     () => groupSum(scoped, (r) => r.item, (r) => ({ kubun: r.kubun })).sort((a, b) => b.ten - a.ten).slice(0, 10),
     [scoped]
   );
-  const topDrs = useMemo(
-    () => groupSum(scoped, (r) => `${r.doctor}／${r.dept}`, (r) => ({ doctor: r.doctor, dept: r.dept })).sort((a, b) => b.ten - a.ten).slice(0, 8),
+  const deptTable = useMemo(
+    () => groupSum(scoped, (r) => r.dept).sort((a, b) => b.ten - a.ten).slice(0, 10),
     [scoped]
   );
-  // 増減点連絡書の原本には医師情報が含まれない。医師データが実質空なら医師別集計は非表示にする。
-  const hasDoctor = useMemo(() => scoped.some((r) => r.doctor && r.doctor !== "不明"), [scoped]);
 
   function chooseFile(mode) {
     modeRef.current = mode;
@@ -83,7 +81,7 @@ export default function Assessment() {
     }
     if (fileRef.current) fileRef.current.value = "";
     if (!recs.length) {
-      alert("読み込めるデータがありませんでした。列名（診療年月／診療科／医師／事由／区分／項目名／増減点数）をご確認ください。");
+      alert("読み込めるデータがありませんでした。列名（診療年月／診療科／事由／区分／項目名／増減点数）や、原本形式（レコード種別付き）のファイルかをご確認ください。");
       return;
     }
     if (modeRef.current === "add") {
@@ -129,7 +127,7 @@ export default function Assessment() {
     <div>
       <div className="mb-4 flex items-start gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs leading-relaxed text-emerald-800">
         <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
-        <p>アップロードしたCSVはこのブラウザ内だけで処理され、サーバーには送信・保存されません。患者氏名・被保険者番号などの個人を特定できる情報は含めないでください（医師名も可能な限りコード化を推奨します）。</p>
+        <p>アップロードしたCSVはこのブラウザ内だけで処理され、サーバーには送信・保存されません。原本CSVに患者氏名・被保険者番号などの個人情報が含まれていても、分析に必要な列（診療年月・診療科・事由・区分・項目名・増減点数）のみを読み込み、個人識別情報は取り込みません。</p>
       </div>
       {/* ツールバー */}
       <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -310,34 +308,27 @@ export default function Assessment() {
           </table>
         </Panel>
 
-        <Panel title="医師別の減点点数" note={hasDoctor ? "上位8名" : "医師情報なし"}>
-          {!hasDoctor ? (
-            <div className="px-1 py-8 text-center text-xs leading-relaxed text-slate-400">
-              増減点連絡書の原本には医師情報が含まれないため、医師別の集計は表示できません。<br />
-              受付番号でレセコンの担当医情報と突合し「医師」列を付与すると、医師別の傾向も分析できます。
-            </div>
-          ) : (
+        <Panel title="診療科別の減点点数" note="上位10科・件数／点数／金額">
           <table className="w-full border-collapse text-sm">
             <thead className="text-left text-xs text-slate-500">
               <tr>
-                <th className="border-b border-slate-200 px-2 py-1.5 font-medium">医師</th>
                 <th className="border-b border-slate-200 px-2 py-1.5 font-medium">診療科</th>
                 <th className="border-b border-slate-200 px-2 py-1.5 text-right font-medium">件数</th>
                 <th className="border-b border-slate-200 px-2 py-1.5 text-right font-medium">減点点数</th>
+                <th className="border-b border-slate-200 px-2 py-1.5 text-right font-medium">金額</th>
               </tr>
             </thead>
             <tbody>
-              {topDrs.map((o) => (
+              {deptTable.map((o) => (
                 <tr key={o.key} className="border-b border-slate-100 last:border-0">
-                  <td className="px-2 py-1.5 text-slate-700">{o.doctor}</td>
-                  <td className="px-2 py-1.5 text-slate-500">{o.dept}</td>
+                  <td className="px-2 py-1.5 text-slate-700">{o.key}</td>
                   <td className="px-2 py-1.5 text-right tabular-nums text-slate-600">{fmt(o.count)}</td>
                   <td className="px-2 py-1.5 text-right tabular-nums font-medium text-slate-800">{fmt(o.ten)}</td>
+                  <td className="px-2 py-1.5 text-right tabular-nums text-slate-500">¥{fmt(o.ten * 10)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-          )}
         </Panel>
       </div>
       </>

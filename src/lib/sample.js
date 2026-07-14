@@ -5,16 +5,9 @@
 export const MONTHS = ["2025-08", "2025-09", "2025-10", "2025-11", "2025-12", "2026-01"];
 
 const DEPTS = [
-  { name: "内科", drs: ["田中", "佐藤", "鈴木"] },
-  { name: "外科", drs: ["高橋", "伊藤"] },
-  { name: "整形外科", drs: ["渡辺", "山本"] },
-  { name: "循環器内科", drs: ["中村", "小林"] },
-  { name: "消化器内科", drs: ["加藤", "吉田"] },
-  { name: "小児科", drs: ["山田"] },
-  { name: "産婦人科", drs: ["松本"] },
-  { name: "眼科", drs: ["井上"] },
-  { name: "皮膚科", drs: ["木村"] },
-  { name: "泌尿器科", drs: ["林"] },
+  { name: "内科" }, { name: "外科" }, { name: "整形外科" }, { name: "循環器内科" },
+  { name: "消化器内科" }, { name: "小児科" }, { name: "産婦人科" }, { name: "眼科" },
+  { name: "皮膚科" }, { name: "泌尿器科" },
 ];
 
 const KUBUN = {
@@ -56,14 +49,13 @@ export function makeSample() {
   for (let i = 0; i < 280; i++) {
     const ym = wpick(rng, MONTHS, mW);
     const d = wpick(rng, DEPTS, dW);
-    const doctor = d.drs[Math.floor(rng() * d.drs.length)];
     const kubun = wpick(rng, KUBUN_KEYS, kW);
     const meta = KUBUN[kubun];
     const item = meta.items[Math.floor(rng() * meta.items.length)];
     const reason = wpick(rng, rKeys, rW);
     const [lo, hi] = meta.range;
     const ten = Math.round(lo + rng() * (hi - lo));
-    out.push({ id: i, ym, dept: d.name, doctor, reason, kubun, item, ten });
+    out.push({ id: i, ym, dept: d.name, reason, kubun, item, ten });
   }
   return out;
 }
