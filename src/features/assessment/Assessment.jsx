@@ -3,7 +3,7 @@ import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell,
 } from "recharts";
-import { TrendingUp, TrendingDown, FolderOpen, FilePlus, Download, RotateCcw, ShieldCheck } from "lucide-react";
+import { TrendingUp, TrendingDown, FolderOpen, FilePlus, Download, RotateCcw, ShieldCheck, Trash2, Inbox } from "lucide-react";
 import { REASONS } from "../../lib/reasons.js";
 import { makeSample } from "../../lib/sample.js";
 import { fmt, shortYm, groupSum } from "../../lib/utils.js";
@@ -113,6 +113,15 @@ export default function Assessment() {
     setYm("all");
     setDept("all");
   }
+  // 累計をリセット：読み込み済みの累計データを消去して空の状態にする（サンプルには戻さない）
+  function resetCumulative() {
+    if (data.length === 0) return;
+    if (!window.confirm("読み込み済みの累計データをすべて消去し、空の状態にします。よろしいですか？\n（「累積を書き出す」で保存していない変更は失われます）")) return;
+    setData([]);
+    setCustom(true);
+    setYm("all");
+    setDept("all");
+  }
 
   return (
     <div>
@@ -137,8 +146,8 @@ export default function Assessment() {
           </select>
         </div>
         <div className="ml-auto flex flex-wrap items-center gap-2">
-          <span className={`rounded-full px-2 py-0.5 text-xs ${custom ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>
-            {custom ? "自院データ（累積）" : "サンプルデータ"}
+          <span className={`rounded-full px-2 py-0.5 text-xs ${!custom ? "bg-slate-100 text-slate-500" : data.length ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
+            {!custom ? "サンプルデータ" : data.length ? "自院データ（累積）" : "累計リセット済み（データなし）"}
           </span>
           {period && <span className="text-xs text-slate-500">対象期間 {period.min}〜{period.max}／{fmt(data.length)}件</span>}
           <button onClick={() => chooseFile("open")} className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-600 hover:border-slate-400">
@@ -147,9 +156,14 @@ export default function Assessment() {
           <button onClick={() => chooseFile("add")} className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-600 hover:border-slate-400">
             <FilePlus className="h-3.5 w-3.5" /> 当月分を追加
           </button>
-          <button onClick={exportCumulative} className="inline-flex items-center gap-1 rounded-md border border-teal-600 bg-teal-600 px-2.5 py-1 text-xs text-white hover:bg-teal-700">
+          <button onClick={exportCumulative} disabled={!data.length} className={`inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs ${data.length ? "border-teal-600 bg-teal-600 text-white hover:bg-teal-700" : "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"}`}>
             <Download className="h-3.5 w-3.5" /> 累積を書き出す
           </button>
+          {custom && data.length > 0 && (
+            <button onClick={resetCumulative} className="inline-flex items-center gap-1 rounded-md border border-rose-200 bg-white px-2.5 py-1 text-xs text-rose-600 hover:bg-rose-50">
+              <Trash2 className="h-3.5 w-3.5" /> 累計をリセット
+            </button>
+          )}
           {custom && (
             <button onClick={reset} className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-600 hover:border-slate-400">
               <RotateCcw className="h-3.5 w-3.5" /> サンプルに戻す
@@ -159,6 +173,27 @@ export default function Assessment() {
         </div>
       </div>
 
+      {data.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
+          <Inbox className="mx-auto mb-3 h-8 w-8 text-slate-300" />
+          <p className="text-sm font-medium text-slate-600">累計データは空です</p>
+          <p className="mx-auto mt-1 max-w-md text-xs leading-relaxed text-slate-400">
+            「累積を開く」で保存済みの累計ファイルを読み込むか、「当月分を追加」で当月の増減点連絡書CSVを取り込んでください。デモを見るには「サンプルに戻す」を押します。
+          </p>
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
+            <button onClick={() => chooseFile("open")} className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-600 hover:border-slate-400">
+              <FolderOpen className="h-3.5 w-3.5" /> 累積を開く
+            </button>
+            <button onClick={() => chooseFile("add")} className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-600 hover:border-slate-400">
+              <FilePlus className="h-3.5 w-3.5" /> 当月分を追加
+            </button>
+            <button onClick={reset} className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-600 hover:border-slate-400">
+              <RotateCcw className="h-3.5 w-3.5" /> サンプルに戻す
+            </button>
+          </div>
+        </div>
+      ) : (
+      <>
       {/* KPI */}
       <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-5">
         <Kpi label="減点点数（対象期間）" value={fmt(totalTen)} unit="点" />
@@ -296,6 +331,8 @@ export default function Assessment() {
           </table>
         </Panel>
       </div>
+      </>
+      )}
     </div>
   );
 }
